@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8.2.0
+    platform: linux/amd64
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=howard
+      - MYSQL_DATABASE=howard
+      - MYSQL_USER=howard
+      - MYSQL_PASSWORD=howard
+    volumes:
+        - db-data:/var/lib/mysql
+volumes:
+    db-data:
+        name: mysql-data
