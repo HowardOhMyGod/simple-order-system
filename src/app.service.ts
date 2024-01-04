@@ -10,6 +10,8 @@ import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import CONST from './config';
+import { CreateProductDTO } from './dto/product.dto';
+import { Product } from './view/product.view';
 
 @Injectable()
 export class AppService {
@@ -35,7 +37,7 @@ export class AppService {
             exp: Math.floor(Date.now() / 1000) + CONST.JWT_EXPIRE_MINUTES * 60,
             data: {
               userId: user.id,
-              role: user.role,
+              roles: [user.role],
             },
           },
           CONST.JWT_SECRET,
@@ -43,6 +45,18 @@ export class AppService {
       };
     } catch (err) {
       this.logger.error(`login error: ${err}`);
+      throw err;
+    }
+  }
+
+  async createProduct(
+    creatorId: number,
+    createProductDTO: CreateProductDTO,
+  ): Promise<Product> {
+    try {
+      return this.appRepository.createProduct(creatorId, createProductDTO);
+    } catch (err) {
+      this.logger.error(`create product error: ${err}`);
       throw err;
     }
   }

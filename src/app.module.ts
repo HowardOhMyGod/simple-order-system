@@ -1,9 +1,17 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppRepository } from './app.repository';
 import * as mysql from 'mysql2/promise';
 import CONST from './config';
+import { AuthMiddleware } from './middleware/auth.middleware';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './middleware/role.middleware';
 
 @Module({
   imports: [],
@@ -15,7 +23,7 @@ import CONST from './config';
       useClass: AppRepository,
     },
     {
-      provide: 'CONNECTION',
+      provide: 'MYSQL_CONNECTION',
       useFactory: async () => {
         const connection = await mysql.createConnection({
           host: CONST.MYSQL_HOST,
@@ -26,6 +34,16 @@ import CONST from './config';
         return connection;
       },
     },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .forRoutes({ path: 'product', method: RequestMethod.POST });
+  }
+}
