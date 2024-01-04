@@ -12,7 +12,7 @@ import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import CONST from './config';
-import { CreateProductDTO } from './dto/product.dto';
+import { CreateProductDTO, UpdateProductDTO } from './dto/product.dto';
 import { Product } from './view/product.view';
 
 @Injectable()
@@ -82,6 +82,28 @@ export class AppService {
       }
     } catch (err) {
       this.logger.error(`delete product error: ${err}`);
+      throw err;
+    }
+  }
+
+  async updateProduct(
+    productId: number,
+    userId: number,
+    updateProductDTO: UpdateProductDTO,
+  ): Promise<void> {
+    try {
+      const product = await this.appRepository.findProductById(productId);
+      if (_.isNil(product)) throw new NotFoundException();
+
+      if (_.isEmpty(updateProductDTO)) return;
+
+      await this.appRepository.updateProduct(
+        productId,
+        userId,
+        updateProductDTO,
+      );
+    } catch (err) {
+      this.logger.error(`update product error: ${err}`);
       throw err;
     }
   }

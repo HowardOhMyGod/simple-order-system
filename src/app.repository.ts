@@ -3,6 +3,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import * as _ from 'lodash';
 import { Product } from './view/product.view';
 import { OrderProduct } from './view/order.view';
+import { UpdateProductDTO } from './dto/product.dto';
 
 @Injectable()
 export class AppRepository {
@@ -62,5 +63,23 @@ export class AppRepository {
       [userId, productId],
     );
     return results;
+  }
+
+  async updateProduct(
+    productId: number,
+    userId: number,
+    product: UpdateProductDTO,
+  ): Promise<void> {
+    const updates: string[] = [];
+    const vals: any[] = [];
+    for (const [field, val] of Object.entries(product)) {
+      updates.push(`\`${field}\` = ?`);
+      vals.push(val);
+    }
+
+    const query = `UPDATE \`product\` SET last_update_user_Id = ?, ${updates.join(
+      ',',
+    )} WHERE \`id\` = ?`;
+    await this.mysqlConn.execute(query, [userId, ...vals, productId]);
   }
 }

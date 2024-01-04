@@ -47,6 +47,7 @@ export class AppModule implements NestModule {
       .forRoutes(
         { path: 'product', method: RequestMethod.POST },
         { path: 'product/:productId', method: RequestMethod.DELETE },
+        { path: 'product/:productId', method: RequestMethod.PUT },
       );
   }
 }

@@ -7,13 +7,14 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Req,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LoginDTO } from './dto/login.dto';
-import { CreateProductDTO } from './dto/product.dto';
+import { CreateProductDTO, UpdateProductDTO } from './dto/product.dto';
 import { Role } from './enum';
 import { Roles } from './decorator/role.decorator';
 
@@ -51,5 +52,21 @@ export class AppController {
     @Param('productId', new ParseIntPipe()) productId: number,
   ) {
     return this.appService.deleteProduct(productId, req['user']['userId']);
+  }
+
+  @Put('/product/:productId')
+  @Roles(Role.Manager)
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  updateProduct(
+    @Req() req: Request,
+    @Param('productId', new ParseIntPipe()) productId: number,
+    @Body() updateProductDTO: UpdateProductDTO,
+  ) {
+    return this.appService.updateProduct(
+      productId,
+      req['user']['userId'],
+      updateProductDTO,
+    );
   }
 }
