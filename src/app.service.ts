@@ -3,6 +3,8 @@ import {
   Inject,
   Logger,
   UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { AppRepository } from './app.repository';
 import { LoginView } from './view/login.view';
@@ -57,6 +59,29 @@ export class AppService {
       return this.appRepository.createProduct(creatorId, createProductDTO);
     } catch (err) {
       this.logger.error(`create product error: ${err}`);
+      throw err;
+    }
+  }
+
+  async deleteProduct(productId: number, userId: number): Promise<void> {
+    try {
+      const product = await this.appRepository.findProductById(productId);
+      if (_.isNil(product)) throw new NotFoundException();
+
+      const orders = await this.appRepository.findOrdersByProductId(
+        productId,
+        0,
+        1,
+      );
+      if (!_.isEmpty(orders))
+        throw new BadRequestException('Existing order with the product');
+
+      const results = await this.appRepository.deleteProduct(productId, userId);
+      if (results.affectedRows <= 0) {
+        throw new BadRequestException('The product has been deleted');
+      }
+    } catch (err) {
+      this.logger.error(`delete product error: ${err}`);
       throw err;
     }
   }

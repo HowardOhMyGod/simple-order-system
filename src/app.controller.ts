@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Req,
   UsePipes,
@@ -37,5 +40,16 @@ export class AppController {
       req['user']['userId'],
       createProductDTO,
     );
+  }
+
+  @Delete('/product/:productId')
+  @Roles(Role.Manager)
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  deleteProduct(
+    @Req() req: Request,
+    @Param('productId', new ParseIntPipe()) productId: number,
+  ) {
+    return this.appService.deleteProduct(productId, req['user']['userId']);
   }
 }

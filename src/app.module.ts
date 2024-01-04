@@ -44,6 +44,9 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes({ path: 'product', method: RequestMethod.POST });
+      .forRoutes(
+        { path: 'product', method: RequestMethod.POST },
+        { path: 'product/:productId', method: RequestMethod.DELETE },
+      );
   }
 }
