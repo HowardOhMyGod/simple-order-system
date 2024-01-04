@@ -3,7 +3,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import * as _ from 'lodash';
 import { Product } from './view/product.view';
 import { OrderProduct } from './view/order.view';
-import { UpdateProductDTO } from './dto/product.dto';
+import { GetProductsDTO, UpdateProductDTO } from './dto/product.dto';
 
 @Injectable()
 export class AppRepository {
@@ -81,5 +81,27 @@ export class AppRepository {
       ',',
     )} WHERE \`id\` = ?`;
     await this.mysqlConn.execute(query, [userId, ...vals, productId]);
+  }
+
+  async getProducts(filter: GetProductsDTO): Promise<Product[]> {
+    let query = 'SELECT `id`,`name`,`price`,`stock`,`active` FROM `product`';
+
+    const whereConds: string[] = [];
+    const whereVals: any[] = [];
+    for (const [field, val] of Object.entries(filter)) {
+      if (field === 'page' || field === 'size') continue;
+      whereConds.push(`\`${field}\` = ?`);
+      whereVals.push(val);
+    }
+
+    if (!_.isEmpty(whereConds)) query += ` WHERE ${whereConds.join(' AND ')}`;
+
+    query =
+      query +
+      ` ORDER BY \`id\` LIMIT ${filter.size} OFFSET ${
+        filter.page * filter.size
+      }`;
+    const [results] = await this.mysqlConn.execute(query, whereVals);
+    return results;
   }
 }

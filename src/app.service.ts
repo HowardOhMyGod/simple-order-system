@@ -12,7 +12,11 @@ import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import CONST from './config';
-import { CreateProductDTO, UpdateProductDTO } from './dto/product.dto';
+import {
+  CreateProductDTO,
+  GetProductsDTO,
+  UpdateProductDTO,
+} from './dto/product.dto';
 import { Product } from './view/product.view';
 
 @Injectable()
@@ -104,6 +108,15 @@ export class AppService {
       );
     } catch (err) {
       this.logger.error(`update product error: ${err}`);
+      throw err;
+    }
+  }
+
+  async getProducts(dto: GetProductsDTO): Promise<Product[]> {
+    try {
+      return this.appRepository.getProducts(dto);
+    } catch (err) {
+      this.logger.error(`get products error: ${err}`);
       throw err;
     }
   }

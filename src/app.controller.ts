@@ -2,19 +2,25 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LoginDTO } from './dto/login.dto';
-import { CreateProductDTO, UpdateProductDTO } from './dto/product.dto';
+import {
+  CreateProductDTO,
+  GetProductsDTO,
+  UpdateProductDTO,
+} from './dto/product.dto';
 import { Role } from './enum';
 import { Roles } from './decorator/role.decorator';
 
@@ -29,18 +35,30 @@ export class AppController {
     return this.appService.login(loginDto.username, loginDto.password);
   }
 
+  @Get('/products')
+  @UsePipes(new ValidationPipe({transform: true}))
+  async getProducts(@Query() getProductsDTO: GetProductsDTO) {
+    const products = await this.appService.getProducts(getProductsDTO);
+    return {
+      data: products
+    }
+  }
+
   @Post('/product')
   @Roles(Role.Manager)
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.CREATED)
-  createProduct(
+  async createProduct(
     @Req() req: Request,
     @Body() createProductDTO: CreateProductDTO,
   ) {
-    return this.appService.createProduct(
+    const product = await this.appService.createProduct(
       req['user']['userId'],
       createProductDTO,
     );
+    return {
+      data: product
+    }
   }
 
   @Delete('/product/:productId')
