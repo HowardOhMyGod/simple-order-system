@@ -4,4 +4,10 @@ export class OrderProduct {
   public userId: number;
   public quantity: number;
   public price: number;
+  public name: string;
+}
+
+export class Order {
+  public id: number;
+  public products: OrderProduct[];
 }

@@ -18,6 +18,9 @@ import {
   UpdateProductDTO,
 } from './dto/product.dto';
 import { Product } from './view/product.view';
+import { GetOrdersDTO } from './dto/order.dto';
+import { Order } from './view/order.view';
+import { Role } from './enum';
 
 @Injectable()
 export class AppService {
@@ -117,6 +120,37 @@ export class AppService {
       return this.appRepository.getProducts(dto);
     } catch (err) {
       this.logger.error(`get products error: ${err}`);
+      throw err;
+    }
+  }
+
+  async getOrders(
+    dto: GetOrdersDTO,
+    userId: number,
+    userRoles: Role[],
+  ): Promise<Order[]> {
+    try {
+      userId = userRoles.includes(Role.Manager) ? null : userId;
+      const orderIds = await this.appRepository.getOrdersIds(dto, userId);
+      if (_.isEmpty(orderIds)) return [];
+
+      const orderProducts =
+        await this.appRepository.getOrderProductsByOrderIds(orderIds);
+
+      const orderGroups = _.groupBy(
+        orderProducts,
+        (product) => product.orderId,
+      );
+      const orders: Order[] = [];
+      for (const [orderId, products] of Object.entries(orderGroups)) {
+        orders.push({
+          id: Number(orderId),
+          products,
+        });
+      }
+      return orders;
+    } catch (err) {
+      this.logger.error(`get orders error: ${err}`);
       throw err;
     }
   }

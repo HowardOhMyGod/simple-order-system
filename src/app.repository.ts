@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import { Product } from './view/product.view';
 import { OrderProduct } from './view/order.view';
 import { GetProductsDTO, UpdateProductDTO } from './dto/product.dto';
+import { GetOrdersDTO } from './dto/order.dto';
 
 @Injectable()
 export class AppRepository {
@@ -103,5 +104,35 @@ export class AppRepository {
       }`;
     const [results] = await this.mysqlConn.execute(query, whereVals);
     return results;
+  }
+
+  async getOrdersIds(filter: GetOrdersDTO, userId?: number): Promise<number[]> {
+    let query = 'SELECT `id` FROM `order`';
+
+    if (!_.isNil(userId)) {
+      query += ` WHERE \`user_id\` = ${userId}`;
+    }
+
+    query += ` ORDER BY \`id\` DESC LIMIT ${filter.size} OFFSET ${
+      filter.page * filter.size
+    }`;
+    const [results] = await this.mysqlConn.query(query);
+    return results.map((data: RowDataPacket) => data.id);
+  }
+
+  async getOrderProductsByOrderIds(
+    orderIds: number[],
+  ): Promise<OrderProduct[]> {
+    const [results] = await this.mysqlConn.query(
+      'SELECT order_id,product_id,order_product.price,order_product.quantity,order_product.ctime,product.name FROM order_product JOIN product ON product.id = order_product.product_id WHERE order_id IN (?)',
+      [orderIds],
+    );
+    return results.map((data: RowDataPacket) => ({
+      orderId: data.order_id,
+      productId: data.product_id,
+      name: data.name,
+      price: data.price,
+      quantity: data.quantity,
+    }));
   }
 }

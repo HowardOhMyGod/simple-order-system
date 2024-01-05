@@ -23,6 +23,7 @@ import {
 } from './dto/product.dto';
 import { Role } from './enum';
 import { Roles } from './decorator/role.decorator';
+import { GetOrdersDTO } from './dto/order.dto';
 
 @Controller()
 export class AppController {
@@ -36,12 +37,12 @@ export class AppController {
   }
 
   @Get('/products')
-  @UsePipes(new ValidationPipe({transform: true}))
+  @UsePipes(new ValidationPipe({ transform: true }))
   async getProducts(@Query() getProductsDTO: GetProductsDTO) {
     const products = await this.appService.getProducts(getProductsDTO);
     return {
-      data: products
-    }
+      data: products,
+    };
   }
 
   @Post('/product')
@@ -57,8 +58,8 @@ export class AppController {
       createProductDTO,
     );
     return {
-      data: product
-    }
+      data: product,
+    };
   }
 
   @Delete('/product/:productId')
@@ -86,5 +87,18 @@ export class AppController {
       req['user']['userId'],
       updateProductDTO,
     );
+  }
+
+  @Get('/orders')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getOrders(@Req() req: Request, @Query() getOrdersDTO: GetOrdersDTO) {
+    const orders = await this.appService.getOrders(
+      getOrdersDTO,
+      req['user'].userId,
+      req['user'].roles,
+    );
+    return {
+      data: orders,
+    };
   }
 }
