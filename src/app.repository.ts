@@ -28,7 +28,7 @@ export class AppRepository {
 
   async createProduct(creatorId: number, product: Product): Promise<Product> {
     const [results] = await this.mysqlConn.execute(
-      'INSERT INTO `product` (`name`,`price`,`stock`, `last_udpate_user_id`) VALUES (?,?,?,?)',
+      'INSERT INTO `product` (`name`,`price`,`stock`,`last_update_user_id`) VALUES (?,?,?,?)',
       [product.name, product.price, product.stock, creatorId],
     );
 

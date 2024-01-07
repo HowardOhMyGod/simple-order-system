@@ -1,49 +1,39 @@
-## Description
+## How to run the application
+Make sure to install docker then run `docker compose up`. The API server and MySQL will be available at port 3000 and 3306 from host.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Steps:
+- run `docker compose up`
+- connect to MySQL server to create db and tables using query in `data.sql`
+- create user and generate pasword (A user can belong to role `customer` or `manager`)
+- test the APIs from postman or curl
 
-## Installation
+### Password Generation
+You can use this site to generate password: https://www.browserling.com/tools/bcrypt
 
+### MySQL Table Creation
+Make sure to create db and tables first using sql query in `data.sql`
+
+### API
+You can import `postman_collection.json` to test the API. There are 7 APIs:
+- `POST /login` (login to get JWT token)
+- `POST /product` (create product)
+- `DELETE /product/:id` (soft delete the product)
+- `PUT /product/:id` (update product)
+- `GET /products?price={}&stock={}` (get product list)
+- `GET /orders` (get order list)
+- `POST /order` (create order)
+
+
+## Development Set Up
+
+### Installation
 ```bash
 $ yarn install
 ```
 
-## Running the app
+### Running the app
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+$ yarn run start:debug
 ```
 
-## Test
-
-```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
