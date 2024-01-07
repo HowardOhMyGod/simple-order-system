@@ -189,7 +189,7 @@ export class AppRepository {
         // create order product
         await this.mysqlConn.query(
           'INSERT INTO `order_product` (`user_id`,`order_id`,`product_id`,`quantity`,`price`) VALUES (?,?,?,?,?)',
-          [userId, orderId, product.id, 1, product.price],
+          [userId, orderId, product.id, product.quantity, product.price],
         );
       }
       await this.mysqlConn.commit();
