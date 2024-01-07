@@ -178,7 +178,7 @@ export class AppService {
         })),
       );
     } catch (err) {
-      this.logger.error(`get orders error: ${err}`);
+      this.logger.error(`create orders error: ${err}`);
       throw err;
     }
   }
