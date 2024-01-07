@@ -13,8 +13,31 @@ services:
       - MYSQL_DATABASE=howard
       - MYSQL_USER=howard
       - MYSQL_PASSWORD=howard
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
     volumes:
-        - db-data:/var/lib/mysql
+      - db-data:/var/lib/mysql
+    networks:
+      - db-network
+
+  order-system:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports: 
+      - 3000:3000
+    environment:
+      - MYSQL_HOST=mysql
+    networks:
+      - db-network
+
 volumes:
-    db-data:
-        name: mysql-data
+  db-data:
+    name: mysql-data
+networks:
+  db-network:
+    name: db-network
