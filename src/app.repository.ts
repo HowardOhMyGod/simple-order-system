@@ -1,4 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  BadRequestException,
+  HttpException,
+} from '@nestjs/common';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import * as _ from 'lodash';
 import { Product } from './view/product.view';
@@ -8,6 +14,8 @@ import { GetOrdersDTO } from './dto/order.dto';
 
 @Injectable()
 export class AppRepository {
+  private readonly logger = new Logger(AppRepository.name);
+
   constructor(@Inject('MYSQL_CONNECTION') private readonly mysqlConn) {}
 
   async findUser(username: string): Promise<RowDataPacket> {
@@ -34,6 +42,14 @@ export class AppRepository {
       [productId],
     );
     return _.head(results);
+  }
+
+  async findProductsByIds(productIds: number[]): Promise<Product[]> {
+    const [results] = await this.mysqlConn.query(
+      'SELECT `id`,`name`,`price`,`stock`,`active` FROM `product` WHERE `id` IN (?)',
+      [productIds],
+    );
+    return results;
   }
 
   async findOrdersByProductId(
@@ -134,5 +150,56 @@ export class AppRepository {
       price: data.price,
       quantity: data.quantity,
     }));
+  }
+
+  async createOrder(
+    userId: number,
+    products: { id: number; name: string; price: number; quantity: number }[],
+  ): Promise<any> {
+    try {
+      await this.mysqlConn.query('SET autocommit = 0');
+      await this.mysqlConn.beginTransaction();
+
+      let orderId: number = null;
+      for (const product of products) {
+        // update product and check stock
+        const [result] = await this.mysqlConn.query(
+          'UPDATE `product` SET `stock`=`stock`-? WHERE `id`=? AND `stock` >= ?',
+          [product.quantity, product.id, product.quantity],
+        );
+
+        // optimistic lock
+        if (result.affectedRows < 1) {
+          await this.mysqlConn.rollback();
+          this.logger.error(
+            `mysql create order error: product ${product.id} out of stock`,
+          );
+          throw new BadRequestException(`product ${product.id} out of stock`);
+        }
+
+        // create order once
+        if (_.isNil(orderId)) {
+          const [order] = await this.mysqlConn.query(
+            'INSERT INTO `order` (`user_id`) VALUES (?)',
+            [userId],
+          );
+          orderId = order.insertId;
+        }
+
+        // create order product
+        await this.mysqlConn.query(
+          'INSERT INTO `order_product` (`user_id`,`order_id`,`product_id`,`quantity`,`price`) VALUES (?,?,?,?,?)',
+          [userId, orderId, product.id, 1, product.price],
+        );
+      }
+      await this.mysqlConn.commit();
+    } catch (err) {
+      await this.mysqlConn.rollback();
+      if (!(err instanceof HttpException)) {
+        this.logger.error(`mysql create order error: ${err}`);
+        throw new Error(`mysql create order error`);
+      }
+      throw err;
+    }
   }
 }

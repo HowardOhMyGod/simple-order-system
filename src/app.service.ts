@@ -18,7 +18,7 @@ import {
   UpdateProductDTO,
 } from './dto/product.dto';
 import { Product } from './view/product.view';
-import { GetOrdersDTO } from './dto/order.dto';
+import { CreateOrderDTO, GetOrdersDTO } from './dto/order.dto';
 import { Order } from './view/order.view';
 import { Role } from './enum';
 
@@ -149,6 +149,34 @@ export class AppService {
         });
       }
       return orders;
+    } catch (err) {
+      this.logger.error(`get orders error: ${err}`);
+      throw err;
+    }
+  }
+
+  async createOrder(userId: number, dto: CreateOrderDTO): Promise<void> {
+    try {
+      // check product id all exist
+      const productIds = dto.products.map((product) => product.id);
+      const products = await this.appRepository.findProductsByIds(productIds);
+      if (productIds.length != products.length) {
+        throw new NotFoundException('product not found');
+      }
+
+      // place order and check affected rows
+      const productsMap: Map<number, Product> = new Map();
+      products.forEach((product) => productsMap.set(product.id, product));
+
+      await this.appRepository.createOrder(
+        userId,
+        dto.products.map((product) => ({
+          id: product.id,
+          quantity: product.quantity,
+          name: productsMap.get(product.id).name,
+          price: productsMap.get(product.id).price,
+        })),
+      );
     } catch (err) {
       this.logger.error(`get orders error: ${err}`);
       throw err;

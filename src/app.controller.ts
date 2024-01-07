@@ -23,7 +23,7 @@ import {
 } from './dto/product.dto';
 import { Role } from './enum';
 import { Roles } from './decorator/role.decorator';
-import { GetOrdersDTO } from './dto/order.dto';
+import { CreateOrderDTO, GetOrdersDTO } from './dto/order.dto';
 
 @Controller()
 export class AppController {
@@ -100,5 +100,16 @@ export class AppController {
     return {
       data: orders,
     };
+  }
+
+  @Post('/order')
+  @Roles(Role.Customer)
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.CREATED)
+  async createOrder(
+    @Req() req: Request,
+    @Body() createOrderDTO: CreateOrderDTO,
+  ) {
+    await this.appService.createOrder(req['user']['userId'], createOrderDTO);
   }
 }
